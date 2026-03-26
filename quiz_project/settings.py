@@ -1,12 +1,14 @@
 import os
+from dotenv  import load_dotenv
 from pathlib import Path
 from datetime import timedelta
 
+load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-q!z&e$v@k#m8x+y1w2u3t4r5p6o7n8b9a0s1d2f3g4h5'
-
-DEBUG = True
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -62,10 +64,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'quiz_db'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'USER': os.environ.get('DB_USER', 'quiz_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'taylor010'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 

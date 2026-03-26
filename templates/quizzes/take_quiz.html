@@ -53,16 +53,22 @@
     </div>
 </div>
 
+{{ questions|length|json_script:"total-questions-data" }}
+{{ quiz.time_limit_minutes|json_script:"time-limit-data" }}
+
 <script>
+// Safely load Django variables
+const totalQuestions = JSON.parse(document.getElementById('total-questions-data').textContent);
+const timeLimitMinutes = JSON.parse(document.getElementById('time-limit-data').textContent);
+
 // Progress tracking
-const totalQuestions = {{ questions|length }};
 function updateProgress() {
     const answered = document.querySelectorAll('input[type="radio"]:checked').length;
     document.getElementById('progress').style.width = (answered / totalQuestions * 100) + '%';
 }
 
 // Timer
-let timeLeft = {{ quiz.time_limit_minutes }} * 60;
+let timeLeft = timeLimitMinutes * 60;
 const timerEl = document.getElementById('timer');
 const interval = setInterval(() => {
     timeLeft--;
