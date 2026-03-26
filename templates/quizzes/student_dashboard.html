@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-10">
+    <div class="animate-fade-in-up">
+        <h1 class="text-3xl font-bold gradient-text mb-8">Student Dashboard</h1>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 stagger">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in-up">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Total Attempts</p>
+                        <p class="text-3xl font-bold text-primary-600 mt-1">{{ total_attempts }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in-up">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Average Score</p>
+                        <p class="text-3xl font-bold text-green-600 mt-1">{{ avg_percentage }}%</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in-up">
+                <a href="{% url 'quiz_list' %}" class="flex items-center justify-between h-full">
+                    <div>
+                        <p class="text-gray-500 text-sm">Available Quizzes</p>
+                        <p class="text-3xl font-bold text-accent-600 mt-1">{{ available_quizzes.count }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Attempts -->
+        <h2 class="text-lg font-bold text-gray-800 mb-4">Recent Attempts</h2>
+        {% if attempts %}
+        <div class="space-y-3 stagger">
+            {% for attempt in attempts %}
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 card-hover animate-fade-in-up flex justify-between items-center">
+                <div>
+                    <h3 class="font-semibold text-gray-800">{{ attempt.quiz.title }}</h3>
+                    <p class="text-sm text-gray-500 mt-0.5">{{ attempt.started_at|date:"M d, Y h:i A" }}</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500">Score</p>
+                        <p class="font-bold text-gray-800">{{ attempt.score }}/{{ attempt.total_questions }}</p>
+                    </div>
+                    <span class="px-3 py-1.5 rounded-full text-sm font-bold
+                        {% if attempt.percentage >= 70 %}bg-green-100 text-green-700
+                        {% elif attempt.percentage >= 40 %}bg-yellow-100 text-yellow-700
+                        {% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ attempt.percentage }}%
+                    </span>
+                    <a href="{% url 'quiz_result' attempt.id %}" class="text-primary-600 hover:text-primary-700 text-sm font-semibold">View →</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 bg-white rounded-xl border border-gray-100">
+            <p class="text-gray-400 mb-4">You haven't taken any quizzes yet.</p>
+            <a href="{% url 'quiz_list' %}" class="inline-block bg-gradient-to-r from-primary-500 to-primary-700 text-white px-6 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-300">Browse Quizzes</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

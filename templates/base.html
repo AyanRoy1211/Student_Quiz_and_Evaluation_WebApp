@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}QuizMaster{% endblock %} | Student Quiz Platform</title>
+    <meta name="description" content="{% block meta_description %}QuizMaster - An EdTech platform for creating and taking quizzes{% endblock %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81' },
+                        accent: { 50:'#fdf4ff',100:'#fae8ff',200:'#f5d0fe',300:'#f0abfc',400:'#e879f9',500:'#d946ef',600:'#c026d3',700:'#a21caf',800:'#86198f',900:'#701a75' },
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="glass sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                    <div class="w-9 h-9 bg-gradient-to-br from-primary-500 to-accent-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">QuizMaster</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        {% if user.role == 'instructor' %}
+                            <a href="{% url 'instructor_dashboard' %}" class="text-gray-600 hover:text-primary-600 transition font-medium text-sm">Dashboard</a>
+                            <a href="{% url 'quiz_create' %}" class="text-gray-600 hover:text-primary-600 transition font-medium text-sm">Create Quiz</a>
+                        {% elif user.role == 'student' %}
+                            <a href="{% url 'student_dashboard' %}" class="text-gray-600 hover:text-primary-600 transition font-medium text-sm">Dashboard</a>
+                            <a href="{% url 'quiz_list' %}" class="text-gray-600 hover:text-primary-600 transition font-medium text-sm">Browse Quizzes</a>
+                        {% elif user.role == 'admin' %}
+                            <a href="{% url 'admin_dashboard' %}" class="text-gray-600 hover:text-primary-600 transition font-medium text-sm">Dashboard</a>
+                            <a href="/admin/" class="text-gray-600 hover:text-primary-600 transition font-medium text-sm">Admin Panel</a>
+                        {% endif %}
+                        <div class="relative group">
+                            <button class="flex items-center space-x-2 bg-primary-50 hover:bg-primary-100 px-3 py-2 rounded-lg transition">
+                                <div class="w-7 h-7 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-xs font-bold">{{ user.first_name|first|default:user.username|first }}</span>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">{{ user.first_name|default:user.username }}</span>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 border border-gray-100">
+                                <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition">Profile</a>
+                                <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">Logout</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-gray-600 hover:text-primary-600 transition font-medium text-sm">Login</a>
+                        <a href="{% url 'register' %}" class="bg-gradient-to-r from-primary-500 to-accent-500 text-white px-5 py-2 rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-primary-200 transition-all duration-300">Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 mt-4 space-y-2 animate-fade-in">
+        {% for message in messages %}
+        <div class="p-4 rounded-lg text-sm font-medium flex items-center justify-between
+            {% if message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+            {% elif message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+            {% elif message.tags == 'warning' %}bg-yellow-50 text-yellow-700 border border-yellow-200
+            {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+            <span>{{ message }}</span>
+            <button onclick="this.parentElement.remove()" class="ml-4 opacity-60 hover:opacity-100">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Content -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-gray-400">
+            &copy; 2026 <span class="gradient-text font-semibold">QuizMaster</span>. Built with Django &amp; Tailwind CSS.
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

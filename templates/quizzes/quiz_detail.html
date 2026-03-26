@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}{{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10">
+    <div class="animate-fade-in-up">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="h-2 bg-gradient-to-r from-primary-400 to-accent-400"></div>
+            <div class="p-8">
+                <h1 class="text-2xl font-bold text-gray-800 mb-3">{{ quiz.title }}</h1>
+                <p class="text-gray-500 mb-6">{{ quiz.description|default:"No description provided" }}</p>
+
+                <div class="grid grid-cols-3 gap-4 mb-8">
+                    <div class="bg-gray-50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-bold text-primary-600">{{ quiz.question_count }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Questions</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-bold text-accent-600">{{ quiz.time_limit_minutes }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Minutes</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 text-center">
+                        <p class="text-2xl font-bold text-green-600">{{ past_attempts.count }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Your Attempts</p>
+                    </div>
+                </div>
+
+                <a href="{% url 'take_quiz' quiz.id %}" class="block w-full text-center bg-gradient-to-r from-primary-500 to-primary-700 text-white py-3.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-primary-200 transition-all duration-300 transform hover:-translate-y-0.5">
+                    Start Quiz →
+                </a>
+            </div>
+        </div>
+
+        <!-- Past Attempts -->
+        {% if past_attempts %}
+        <div class="mt-8">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">Your Past Attempts</h2>
+            <div class="space-y-3">
+                {% for attempt in past_attempts %}
+                <a href="{% url 'quiz_result' attempt.id %}" class="block bg-white rounded-xl p-4 shadow-sm border border-gray-100 card-hover flex justify-between items-center">
+                    <span class="text-sm text-gray-600">{{ attempt.started_at|date:"M d, Y h:i A" }}</span>
+                    <span class="px-3 py-1 rounded-full text-sm font-bold
+                        {% if attempt.percentage >= 70 %}bg-green-100 text-green-700
+                        {% elif attempt.percentage >= 40 %}bg-yellow-100 text-yellow-700
+                        {% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ attempt.score }}/{{ attempt.total_questions }} ({{ attempt.percentage }}%)
+                    </span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

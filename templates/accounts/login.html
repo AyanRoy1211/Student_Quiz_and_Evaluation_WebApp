@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center px-4">
+    <div class="w-full max-w-md animate-fade-in-up">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold gradient-text mb-2">Welcome Back</h1>
+            <p class="text-gray-500">Sign in to continue to QuizMaster</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <form method="POST" class="space-y-5">
+                {% csrf_token %}
+                {% for field in form %}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="w-full bg-gradient-to-r from-primary-500 to-primary-700 text-white py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary-200 transition-all duration-300 transform hover:-translate-y-0.5">
+                    Sign In
+                </button>
+            </form>
+            <p class="text-center text-sm text-gray-500 mt-6">
+                Don't have an account? <a href="{% url 'register' %}" class="text-primary-600 font-semibold hover:underline">Sign Up</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

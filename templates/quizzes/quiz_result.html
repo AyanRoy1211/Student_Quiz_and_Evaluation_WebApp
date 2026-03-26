@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Result{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10">
+    <div class="animate-fade-in-up">
+        <!-- Score Header -->
+        <div class="bg-gradient-to-r {% if attempt.percentage >= 70 %}from-green-500 to-emerald-600{% elif attempt.percentage >= 40 %}from-yellow-500 to-orange-500{% else %}from-red-500 to-pink-600{% endif %} rounded-2xl p-8 text-white text-center mb-8 relative overflow-hidden">
+            <div class="absolute inset-0 bg-black/10"></div>
+            <div class="relative">
+                <p class="text-white/80 text-sm uppercase tracking-wider mb-2">{{ attempt.quiz.title }}</p>
+                <p class="text-6xl font-extrabold mb-2">{{ attempt.percentage }}%</p>
+                <p class="text-white/90 text-lg">{{ attempt.score }} out of {{ attempt.total_questions }} correct</p>
+                <p class="text-white/60 text-sm mt-2">{{ attempt.started_at|date:"M d, Y h:i A" }}</p>
+            </div>
+        </div>
+
+        <!-- Question Review -->
+        <h2 class="text-lg font-bold text-gray-800 mb-4">Question Review</h2>
+        <div class="space-y-4 stagger">
+            {% for item in questions_with_responses %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 animate-fade-in-up
+                {% if item.is_correct %}border-l-4 border-l-green-400{% else %}border-l-4 border-l-red-400{% endif %}">
+                <div class="flex items-start space-x-3 mb-3">
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold flex-shrink-0
+                        {% if item.is_correct %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        {% if item.is_correct %}✓{% else %}✗{% endif %}
+                    </span>
+                    <p class="text-gray-800 font-medium">{{ item.question.text }}</p>
+                </div>
+                <div class="ml-10 space-y-1 text-sm">
+                    {% if item.selected %}
+                    <p class="{% if item.is_correct %}text-green-600{% else %}text-red-600{% endif %}">
+                        <strong>Your answer:</strong> {{ item.selected.text }}
+                    </p>
+                    {% else %}
+                    <p class="text-gray-400"><strong>Your answer:</strong> Not answered</p>
+                    {% endif %}
+                    {% if not item.is_correct and item.correct %}
+                    <p class="text-green-600"><strong>Correct answer:</strong> {{ item.correct.text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8 flex space-x-4">
+            <a href="{% url 'student_dashboard' %}" class="flex-1 text-center bg-gradient-to-r from-primary-500 to-primary-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300">
+                Back to Dashboard
+            </a>
+            <a href="{% url 'quiz_detail' attempt.quiz.id %}" class="px-6 py-3 rounded-xl border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition">
+                Retake Quiz
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

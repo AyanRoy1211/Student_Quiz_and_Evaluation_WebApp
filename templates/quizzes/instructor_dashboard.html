@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Instructor Dashboard{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-10">
+    <div class="animate-fade-in-up">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold gradient-text">My Quizzes</h1>
+                <p class="text-gray-500 mt-1">{{ total_quizzes }} quizzes &middot; {{ published_count }} published</p>
+            </div>
+            <a href="{% url 'quiz_create' %}" class="bg-gradient-to-r from-primary-500 to-primary-700 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-primary-200 transition-all duration-300 flex items-center space-x-2 transform hover:-translate-y-0.5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>New Quiz</span>
+            </a>
+        </div>
+
+        {% if quizzes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
+            {% for quiz in quizzes %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden card-hover animate-fade-in-up">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-gray-800 text-lg">{{ quiz.title }}</h3>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold {% if quiz.is_published %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+                            {% if quiz.is_published %}Live{% else %}Draft{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-4 line-clamp-2">{{ quiz.description|default:"No description" }}</p>
+                    <div class="flex items-center space-x-4 text-sm text-gray-400 mb-5">
+                        <span>📝 {{ quiz.question_count }} Qs</span>
+                        <span>⏱️ {{ quiz.time_limit_minutes }}m</span>
+                        <span>👥 {{ quiz.attempt_count }} attempts</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <a href="{% url 'quiz_add_question' quiz.id %}" class="flex-1 text-center bg-primary-50 text-primary-600 py-2 rounded-lg text-sm font-semibold hover:bg-primary-100 transition">Questions</a>
+                        <a href="{% url 'quiz_edit' quiz.id %}" class="flex-1 text-center bg-gray-50 text-gray-600 py-2 rounded-lg text-sm font-semibold hover:bg-gray-100 transition">Edit</a>
+                        <a href="{% url 'quiz_results' quiz.id %}" class="flex-1 text-center bg-green-50 text-green-600 py-2 rounded-lg text-sm font-semibold hover:bg-green-100 transition">Results</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-20 animate-fade-in">
+            <div class="w-20 h-20 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">No quizzes yet</h3>
+            <p class="text-gray-500 mb-6">Create your first quiz to get started</p>
+            <a href="{% url 'quiz_create' %}" class="inline-block bg-gradient-to-r from-primary-500 to-primary-700 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300">Create Quiz</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

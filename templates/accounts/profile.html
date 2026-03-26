@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+    <div class="animate-fade-in-up">
+        <!-- Profile Header -->
+        <div class="bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl p-8 text-white mb-8 relative overflow-hidden">
+            <div class="absolute inset-0 bg-black/10"></div>
+            <div class="relative flex items-center space-x-6">
+                <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                    <span class="text-3xl font-bold">{{ user.first_name|first|default:user.username|first }}</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">{{ user.get_full_name|default:user.username }}</h1>
+                    <p class="text-white/80 capitalize">{{ user.role }} &middot; Joined {{ user.date_joined|date:"M Y" }}</p>
+                    <p class="text-white/70 text-sm">{{ user.email }}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if user.role == 'student' %}
+        <!-- Student Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 stagger">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in-up">
+                <p class="text-gray-500 text-sm">Quizzes Taken</p>
+                <p class="text-3xl font-bold text-primary-600 mt-1">{{ total_quizzes_taken }}</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in-up">
+                <p class="text-gray-500 text-sm">Total Attempts</p>
+                <p class="text-3xl font-bold text-accent-600 mt-1">{{ attempts.count }}</p>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in-up">
+                <p class="text-gray-500 text-sm">Avg Score</p>
+                <p class="text-3xl font-bold text-green-600 mt-1">{{ avg_score }}%</p>
+            </div>
+        </div>
+
+        <!-- Recent Attempts -->
+        {% if attempts %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+                <h2 class="text-lg font-bold text-gray-800">Recent Attempts</h2>
+            </div>
+            <div class="divide-y divide-gray-50">
+                {% for attempt in attempts %}
+                <div class="p-4 hover:bg-gray-50 transition flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold text-gray-800">{{ attempt.quiz.title }}</p>
+                        <p class="text-sm text-gray-500">{{ attempt.started_at|date:"M d, Y h:i A" }}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold
+                            {% if attempt.percentage >= 70 %}bg-green-100 text-green-700
+                            {% elif attempt.percentage >= 40 %}bg-yellow-100 text-yellow-700
+                            {% else %}bg-red-100 text-red-700{% endif %}">
+                            {{ attempt.score }}/{{ attempt.total_questions }} ({{ attempt.percentage }}%)
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% elif user.role == 'instructor' %}
+        <!-- Instructor Stats -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+            <p class="text-gray-500 text-sm">Total Quizzes Created</p>
+            <p class="text-3xl font-bold text-primary-600 mt-1">{{ total_quizzes }}</p>
+        </div>
+        {% if quizzes %}
+        <div class="space-y-3">
+            {% for quiz in quizzes %}
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex justify-between items-center card-hover">
+                <div>
+                    <p class="font-semibold text-gray-800">{{ quiz.title }}</p>
+                    <p class="text-sm text-gray-500">{{ quiz.question_count }} questions &middot; {{ quiz.created_at|date:"M d, Y" }}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold {% if quiz.is_published %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+                    {% if quiz.is_published %}Published{% else %}Draft{% endif %}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

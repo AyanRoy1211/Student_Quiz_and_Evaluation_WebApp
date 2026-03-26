@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Results - {{ quiz.title }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+    <div class="animate-fade-in-up">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold gradient-text">Results: {{ quiz.title }}</h1>
+                <p class="text-gray-500 mt-1">{{ total_attempts }} attempt{{ total_attempts|pluralize }} &middot; Avg score: {{ avg_score }}</p>
+            </div>
+            <a href="{% url 'instructor_dashboard' %}" class="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition text-sm">← Back</a>
+        </div>
+
+        {% if attempts %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase">Student</th>
+                        <th class="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase">Score</th>
+                        <th class="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase">Percentage</th>
+                        <th class="text-left px-6 py-3 text-xs font-bold text-gray-500 uppercase">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% for attempt in attempts %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-xs font-bold">{{ attempt.student.first_name|first|default:attempt.student.username|first }}</span>
+                                </div>
+                                <span class="font-medium text-gray-800 text-sm">{{ attempt.student.get_full_name|default:attempt.student.username }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600">{{ attempt.score }}/{{ attempt.total_questions }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold
+                                {% if attempt.percentage >= 70 %}bg-green-100 text-green-700
+                                {% elif attempt.percentage >= 40 %}bg-yellow-100 text-yellow-700
+                                {% else %}bg-red-100 text-red-700{% endif %}">
+                                {{ attempt.percentage }}%
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ attempt.started_at|date:"M d, Y h:i A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-16 animate-fade-in">
+            <p class="text-gray-400 text-lg">No attempts yet for this quiz.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

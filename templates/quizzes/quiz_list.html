@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Browse Quizzes{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-10">
+    <div class="animate-fade-in-up">
+        <h1 class="text-3xl font-bold gradient-text mb-2">Available Quizzes</h1>
+        <p class="text-gray-500 mb-8">Choose a quiz to test your knowledge</p>
+
+        {% if quizzes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
+            {% for quiz in quizzes %}
+            <a href="{% url 'quiz_detail' quiz.id %}" class="block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden card-hover animate-fade-in-up group">
+                <div class="h-2 bg-gradient-to-r from-primary-400 to-accent-400"></div>
+                <div class="p-6">
+                    <h3 class="font-bold text-gray-800 text-lg mb-2 group-hover:text-primary-600 transition">{{ quiz.title }}</h3>
+                    <p class="text-gray-500 text-sm mb-4 line-clamp-2">{{ quiz.description|default:"No description provided" }}</p>
+                    <div class="flex items-center justify-between text-sm text-gray-400">
+                        <div class="flex space-x-3">
+                            <span>📝 {{ quiz.question_count_val }} Qs</span>
+                            <span>⏱️ {{ quiz.time_limit_minutes }}m</span>
+                        </div>
+                        <span class="text-xs">by {{ quiz.instructor.get_full_name|default:quiz.instructor.username }}</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-20 animate-fade-in">
+            <div class="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">No quizzes available</h3>
+            <p class="text-gray-500">Check back later for new quizzes</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
