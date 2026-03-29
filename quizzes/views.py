@@ -46,6 +46,9 @@ def quiz_create(request):
 @instructor_required
 def quiz_edit(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id, instructor=request.user)
+    if Attempt.objects.filter(quiz=quiz).exists():
+        messages.error(request, 'Cannot edit a quiz that students have already attempted.')
+        return redirect('instructor_dashboard')
     if request.method == 'POST':
         form = QuizForm(request.POST, instance=quiz)
         if form.is_valid():
@@ -61,6 +64,9 @@ def quiz_edit(request, quiz_id):
 @instructor_required
 def quiz_delete(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id, instructor=request.user)
+    if Attempt.objects.filter(quiz=quiz).exists():
+        messages.error(request, 'Cannot delete a quiz that students have already attempted.')
+        return redirect('instructor_dashboard')
     if request.method == 'POST':
         quiz.delete()
         messages.success(request, 'Quiz deleted.')
@@ -72,6 +78,9 @@ def quiz_delete(request, quiz_id):
 @instructor_required
 def quiz_add_question(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id, instructor=request.user)
+    if Attempt.objects.filter(quiz=quiz).exists():
+        messages.error(request, 'Cannot modify questions for a quiz that has already been attempted.')
+        return redirect('instructor_dashboard')
     if request.method == 'POST':
         q_form = QuestionForm(request.POST)
         if q_form.is_valid():
@@ -108,6 +117,9 @@ def quiz_add_question(request, quiz_id):
 def question_delete(request, question_id):
     question = get_object_or_404(Question, id=question_id, quiz__instructor=request.user)
     quiz_id = question.quiz.id
+    if Attempt.objects.filter(quiz=question.quiz).exists():
+        messages.error(request, 'Cannot delete questions for a quiz that has already been attempted.')
+        return redirect('instructor_dashboard')
     question.delete()
     messages.success(request, 'Question deleted.')
     return redirect('quiz_add_question', quiz_id=quiz_id)

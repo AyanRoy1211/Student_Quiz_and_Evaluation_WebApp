@@ -22,7 +22,7 @@
                 </div>
                 {% endfor %}
                 <div class="flex space-x-3 pt-2">
-                    <button type="submit" class="flex-1 bg-gradient-to-r from-primary-500 to-primary-700 text-white py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary-200 transition-all duration-300">
+                    <button type="submit" class="flex-1 btn-bounce bg-gradient-to-r from-primary-500 to-primary-700 text-white py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-primary-200 transition-all duration-300">
                         {% if quiz %}Update Quiz{% else %}Create Quiz{% endif %}
                     </button>
                     <a href="{% url 'instructor_dashboard' %}" class="px-6 py-3 rounded-lg border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition">Cancel</a>
