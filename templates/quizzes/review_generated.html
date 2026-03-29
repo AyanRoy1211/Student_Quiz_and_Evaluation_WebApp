@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-10 px-4">
+  <h1 class="text-2xl font-semibold text-gray-800 mb-1">Review Generated Questions</h1>
+  <p class="text-gray-500 mb-2">
+    Topic: <strong>{{ meta.topic }}</strong> &nbsp;·&nbsp;
+    Difficulty: <strong>{{ meta.difficulty|capfirst }}</strong> &nbsp;·&nbsp;
+    {{ questions|length }} questions
+  </p>
+  <p class="text-sm text-gray-400 mb-8">
+    You can edit question text and choices directly below before approving.
+    Selecting a radio button marks that choice as the correct answer.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {% for q in questions %}
+    <div class="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
+      <div class="flex items-start gap-3 mb-4">
+        <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full mt-1">
+          Q{{ forloop.counter }}
+        </span>
+        <textarea
+          name="question_{{ forloop.counter }}"
+          rows="2"
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-transparent resize-none"
+        >{{ q.text }}</textarea>
+      </div>
+
+      <div class="space-y-2 ml-10">
+        {% for choice in q.choices %}
+        <div class="flex items-center gap-3">
+          <input
+            type="radio"
+            name="correct_{{ forloop.parentloop.counter }}"
+            value="{{ forloop.counter0 }}"
+            {% if choice.is_correct %}checked{% endif %}
+            class="h-4 w-4 text-indigo-600"
+          >
+          <input
+            type="text"
+            name="choice_{{ forloop.parentloop.counter }}_{{ forloop.counter0 }}"
+            value="{{ choice.text }}"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+          >
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+    <div class="flex gap-3 mt-6">
+      <button type="submit" name="action" value="approve"
+        class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition btn-bounce">
+        Approve & Save Quiz
+      </button>
+      <button type="submit" name="action" value="discard"
+        class="px-6 py-3 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 transition">
+        Discard & Start Over
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

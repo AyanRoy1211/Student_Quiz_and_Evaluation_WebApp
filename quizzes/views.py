@@ -1,3 +1,7 @@
+import os
+import json
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -5,7 +9,7 @@ from django.utils import timezone
 from django.db import models
 from django.db.models import Avg, Count
 from .models import Quiz, Question, Choice, Attempt, Response
-from .forms import QuizForm, QuestionForm, ChoiceFormSet
+from .forms import QuizForm, GenerateQuizForm, QuestionForm, ChoiceFormSet
 from accounts.decorators import instructor_required, student_required
 
 
@@ -247,3 +251,172 @@ def quiz_result(request, attempt_id):
         'questions_with_responses': questions_with_responses,
     }
     return render(request, 'quizzes/quiz_result.html', context)
+
+# ─── AI Generation Views ─────────────────────────────────────
+
+@login_required
+@instructor_required
+def generate_quiz_form(request):
+    """
+    Step 1 — Show the generation form.
+    Instructor fills in topic, difficulty, question count, optional PDF.
+    """
+    form = GenerateQuizForm()
+    return render(request, 'quizzes/generate_quiz_form.html', {'form': form})
+
+
+@login_required
+@instructor_required
+def run_generation(request):
+    """
+    Step 2 — Run the full RAG pipeline.
+    Saves generated questions to the session for review.
+    Does NOT save anything to the database yet.
+    """
+    if request.method != 'POST':
+        return redirect('generate_quiz_form')
+
+    form = GenerateQuizForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return render(request, 'quizzes/generate_quiz_form.html', {'form': form})
+
+    from quizzes.rag.prompt_builder import build_prompt, build_retry_prompt
+    from quizzes.rag.generator import generate_questions
+    from quizzes.rag.validator import validate, deduplicate
+    from quizzes.rag.retriever import build_retriever_from_pdf, retrieve_top_k
+
+    topic         = form.cleaned_data['topic']
+    difficulty    = form.cleaned_data['difficulty']
+    num_questions = form.cleaned_data['num_questions']
+    pdf_file      = form.cleaned_data.get('pdf_file')
+
+    # ── RAG: retrieve context chunks if PDF uploaded ──
+    context_chunks = []
+    pdf_path = None
+
+    if pdf_file:
+        try:
+            # Save PDF temporarily
+            pdf_path = default_storage.save(
+                f'tmp/{pdf_file.name}',
+                ContentFile(pdf_file.read())
+            )
+            full_pdf_path = default_storage.path(pdf_path)
+            chunks, index = build_retriever_from_pdf(full_pdf_path)
+            context_chunks = retrieve_top_k(topic, chunks, index, top_k=6)
+        except Exception as e:
+            messages.error(request, f'Error processing PDF: {str(e)}')
+            return render(request, 'quizzes/generate_quiz_form.html', {'form': form})
+        finally:
+            # Clean up temp file
+            if pdf_path and default_storage.exists(pdf_path):
+                default_storage.delete(pdf_path)
+
+    # ── Build prompt and call Gemini ──
+    prompt = build_prompt(topic, difficulty, num_questions, context_chunks)
+    questions, errors = generate_questions(prompt)
+
+    if errors:
+        messages.error(request, f'Generation failed: {errors[0]}')
+        return render(request, 'quizzes/generate_quiz_form.html', {'form': form})
+
+    # ── Validate ──
+    is_valid, issues = validate(questions)
+
+    if not is_valid:
+        # Auto-fix duplicates and retry once for structural issues
+        questions = deduplicate(questions)
+        is_valid, issues = validate(questions)
+
+        if not is_valid:
+            retry_prompt = build_retry_prompt(prompt, issues)
+            questions, errors = generate_questions(retry_prompt)
+
+            if errors:
+                messages.error(request, f'Generation failed after retry: {errors[0]}')
+                return render(request, 'quizzes/generate_quiz_form.html', {'form': form})
+
+            questions = deduplicate(questions)
+
+    # ── Store in session for the review step ──
+    request.session['generated_questions'] = questions
+    request.session['generated_quiz_meta'] = {
+        'title':              form.cleaned_data['title'],
+        'topic':              topic,
+        'difficulty':         difficulty,
+        'time_limit_minutes': form.cleaned_data['time_limit_minutes'],
+    }
+
+    messages.success(request, f'Generated {len(questions)} questions. Review and approve below.')
+    return redirect('review_generated')
+
+
+@login_required
+@instructor_required
+def review_generated(request):
+    """
+    Step 3 — Instructor reviews, edits, and approves generated questions.
+    On POST approval, creates Quiz/Question/Choice records in the database.
+    """
+    questions = request.session.get('generated_questions')
+    meta      = request.session.get('generated_quiz_meta')
+
+    if not questions or not meta:
+        messages.warning(request, 'No generated questions found. Please generate again.')
+        return redirect('generate_quiz_form')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'discard':
+            request.session.pop('generated_questions', None)
+            request.session.pop('generated_quiz_meta', None)
+            messages.info(request, 'Generated quiz discarded.')
+            return redirect('generate_quiz_form')
+
+        if action == 'approve':
+            # Create the Quiz
+            quiz = Quiz.objects.create(
+                title=meta['title'],
+                description=f"AI-generated quiz on: {meta['topic']} ({meta['difficulty']} difficulty)",
+                instructor=request.user,
+                time_limit_minutes=meta['time_limit_minutes'],
+                is_published=False,
+            )
+
+            # Create Questions and Choices from session data
+            for order, q_data in enumerate(questions, start=1):
+                # Allow instructor edits submitted via the review form
+                question_text = request.POST.get(f'question_{order}', q_data['text'])
+                question = Question.objects.create(
+                    quiz=quiz,
+                    text=question_text,
+                    order=order,
+                )
+                for i, choice_data in enumerate(q_data['choices']):
+                    choice_text    = request.POST.get(f'choice_{order}_{i}', choice_data['text'])
+                    correct_radio  = request.POST.get(f'correct_{order}')
+                    is_correct     = (str(i) == correct_radio) if correct_radio else choice_data['is_correct']
+                    Choice.objects.create(
+                        question=question,
+                        text=choice_text,
+                        is_correct=is_correct,
+                    )
+
+            # Clear session
+            request.session.pop('generated_questions', None)
+            request.session.pop('generated_quiz_meta', None)
+
+            messages.success(
+                request,
+                f'Quiz "{quiz.title}" saved with {quiz.questions.count()} questions. '
+                f'Publish it when ready.'
+            )
+            return redirect('quiz_add_question', quiz_id=quiz.id)
+
+    return render(request, 'quizzes/review_generated.html', {
+        'questions': questions,
+        'meta':      meta,
+    })
+
+

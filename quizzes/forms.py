@@ -66,3 +66,53 @@ ChoiceFormSet = forms.inlineformset_factory(
     max_num=6,
     can_delete=True,
 )
+
+class GenerateQuizForm(forms.Form):
+    title = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition',
+            'placeholder': 'e.g. Introduction to Python Loops',
+        })
+    )
+    topic = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition',
+            'placeholder': 'e.g. Python loops, Django ORM, Neural Networks',
+        })
+    )
+    difficulty = forms.ChoiceField(
+        choices=[('easy', 'Easy'), ('medium', 'Medium'), ('hard', 'Hard')],
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition',
+        })
+    )
+    num_questions = forms.IntegerField(
+        min_value=3,
+        max_value=20,
+        initial=5,
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition',
+            'min': 3,
+            'max': 20,
+        })
+    )
+    time_limit_minutes = forms.IntegerField(
+        min_value=5,
+        max_value=120,
+        initial=30,
+        widget=forms.NumberInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition',
+            'min': 5,
+            'max': 120,
+        })
+    )
+    pdf_file = forms.FileField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-gray-300 transition',
+            'accept': '.pdf',
+        }),
+        help_text='Optional. Upload course material to ground questions in your content.'
+    )
